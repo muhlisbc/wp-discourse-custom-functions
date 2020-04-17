@@ -14,35 +14,48 @@
 
 add_filter( 'wpdc_comment_body', 'wpdc_custom_comment_body' );
 function wpdc_custom_comment_body( $content ) {
-	
+
 	// Allows parsing misformed html. Save the previous value of libxml_use_internal_errors so that it can be restored.
 	$use_internal_errors = libxml_use_internal_errors( true );
 	$doc = new \DOMDocument( '1.0', 'utf-8' );
 	$doc->loadHTML( mb_convert_encoding( $content, 'HTML-ENTITIES', 'UTF-8' ) );
 	$finder = new \DOMXPath( $doc );
-	
+
 	/**
 	 * Functionality to override onebox and extract links
 	 */
 	$oneboxes = $finder->query( "//*[contains(@class, 'onebox')]");
 	$oneboxes = iterator_to_array($oneboxes);
 	foreach( $oneboxes as $onebox ) {
-		$onebox_header = $onebox->getElementsByTagName('header')->item(0);
-		$onebox->removeAttribute('class');
-		if (!is_null($onebox_header)) {
-			$link=$onebox_header->getElementsByTagName('a')->item(0)->getAttribute('href');
-			$onebox_header->getElementsByTagName('a')->item(0)->nodeValue=$link;
-			$link_anchor = $onebox_header->getElementsByTagName('a')->item(0);
-			$link_anchor->setAttribute('target','_blank');
-			$link_anchor->setAttribute('class','');
-			$link_anchor->setAttribute('rel','nofollow');
-			$onebox_parent = $onebox->parentNode;
-			$onebox_p = $doc->createElement('p');
-			$onebox_p->appendChild($link_anchor);
-			$onebox_parent ->replaceChild($onebox_p,$onebox);
-		}
+		// $onebox_header = $onebox->getElementsByTagName('header')->item(0);
+		// $onebox->removeAttribute('class');
+		// if (!is_null($onebox_header)) {
+		// 	$link=$onebox_header->getElementsByTagName('a')->item(0)->getAttribute('href');
+		// 	$onebox_header->getElementsByTagName('a')->item(0)->nodeValue=$link;
+		// 	$link_anchor = $onebox_header->getElementsByTagName('a')->item(0);
+		// 	$link_anchor->setAttribute('target','_blank');
+		// 	$link_anchor->setAttribute('class','');
+		// 	$link_anchor->setAttribute('rel','nofollow');
+		// 	$onebox_parent = $onebox->parentNode;
+		// 	$onebox_p = $doc->createElement('p');
+		// 	$onebox_p->appendChild($link_anchor);
+		// 	$onebox_parent ->replaceChild($onebox_p,$onebox);
+
+    if (!is_null($onebox)) {
+      $href = $onebox->getElementsByTagName('a')->item(0)->getAttribute('href');
+      $link = $doc->createElement('a');
+      $onebox_p = $doc->createElement('p');
+      $onebox_parent = $onebox->parentNode;
+
+      $link->setAttribute('target', '_blank');
+      $link->setAttribute('rel', 'nofollow');
+      $link->setAttribute('href', $href);
+      $link->nodeValue = $href;
+      $onebox_p->appendChild($link);
+      $onebox_parent->replaceChild($onebox_p, $onebox);
+    }
 	}
-  
+
 	/**
 	 * Functionality to override lightbox and extract links
 	 */
@@ -61,7 +74,7 @@ function wpdc_custom_comment_body( $content ) {
 			$lightbox_parent->replaceChild($img_p,$lightbox);
 		}
 	}
-	
+
 	/**
 	 * Functionality to remove images from replies
 	 */
@@ -100,7 +113,7 @@ function wpdc_custom_comment_body( $content ) {
 	// Remove DOCTYPE, html, and body tags that have been added to the DOMDocument.
 	$parsed = preg_replace( '~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $parsed );
 	return $parsed;
-	
+
 }
 
 
@@ -250,13 +263,13 @@ function add_target_blank( $content ) {
 /*-----------------------------------------------------------------------------------*/
 
 function wpdc_custom_publish_format_html() {
-	
+
 	ob_start();
 	echo  nl2br ("This topic is to discuss the following lesson:\n");
 	the_permalink();
 	$output = ob_get_clean();
     return $output;
-    
+
 }
 add_filter( 'discourse_publish_format_html', 'wpdc_custom_publish_format_html' );
 
@@ -266,7 +279,7 @@ add_filter( 'discourse_publish_format_html', 'wpdc_custom_publish_format_html' )
 /*-----------------------------------------------------------------------------------*/
 
 function my_namespace_no_replies_html ( $input ) {
-    
+
 	ob_start();
     ?>
 	<div id="comments" class="comments-area">
@@ -287,7 +300,7 @@ add_filter(  'discourse_no_replies_html', 'my_namespace_no_replies_html' );
 /*-----------------------------------------------------------------------------------*/
 
 function emnl_remove_participants_html( $input ) {
-	
+
     ob_start();
     ?>
     <div id="comments" class="comments-area discourse-comments-area">

@@ -24,7 +24,7 @@ function wpdc_custom_comment_body( $content ) {
 	/**
 	 * Functionality to override onebox and extract links
 	 */
-	$oneboxes = $finder->query( "//*[contains(@class, 'onebox')]");
+	$oneboxes = $finder->query( "//aside[contains(@class, 'onebox')]");
 	$oneboxes = iterator_to_array($oneboxes);
 	foreach( $oneboxes as $onebox ) {
 		// $onebox_header = $onebox->getElementsByTagName('header')->item(0);
@@ -42,17 +42,21 @@ function wpdc_custom_comment_body( $content ) {
 		// 	$onebox_parent ->replaceChild($onebox_p,$onebox);
 
     if (!is_null($onebox)) {
-      $href = $onebox->getElementsByTagName('a')->item(0)->getAttribute('href');
-      $link = $doc->createElement('a');
-      $onebox_p = $doc->createElement('p');
-      $onebox_parent = $onebox->parentNode;
+      $href = $onebox->getElementsByTagName('a')->item(0);
 
-      $link->setAttribute('target', '_blank');
-      $link->setAttribute('rel', 'nofollow');
-      $link->setAttribute('href', $href);
-      $link->nodeValue = $href;
-      $onebox_p->appendChild($link);
-      $onebox_parent->replaceChild($onebox_p, $onebox);
+      if (!is_null($href)) {
+        $href = $href->getAttribute('href');
+        $link = $doc->createElement('a');
+        $onebox_p = $doc->createElement('p');
+        $onebox_parent = $onebox->parentNode;
+
+        $link->setAttribute('target', '_blank');
+        $link->setAttribute('rel', 'nofollow');
+        $link->setAttribute('href', $href);
+        $link->nodeValue = $href;
+        $onebox_p->appendChild($link);
+        $onebox_parent->replaceChild($onebox_p, $onebox);
+      }
     }
 	}
 
